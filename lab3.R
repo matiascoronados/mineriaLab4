@@ -166,11 +166,11 @@ bondadAjuste1 <- compare(res1,dag)
 VP1 <- bondadAjuste1$tp
 FP1 <- bondadAjuste1$fp
 FN1 <- bondadAjuste1$fn
-precicion1 = VP1 / (VP1 + FP1)
+precision1 = VP1 / (VP1 + FP1)
 recall1 = VP / (VP1 + FN1)
-calculoF1 <- 2*precicion*recall/(precicion + recall)
+calculoF1 <- 2*precision*recall/(precision1 + recall)
 BIC1
-precicion1
+precision1
 recall1
 calculoF1
 
@@ -188,9 +188,9 @@ VP1 <- bondadAjuste1$tp
 FP1 <- bondadAjuste1$fp
 FN1 <- bondadAjuste1$fn
 
-precicion1 = VP1 / (VP1 + FP1)
+precision1 = VP1 / (VP1 + FP1)
 recall1 = VP / (VP1 + FN1)
-calculoF1 <- 2*precicion*recall/(precicion + recall)
+calculoF1 <- 2*precision1*recall/(precision1 + recall)
 
 
 
@@ -207,9 +207,9 @@ bondadAjuste1 <- (compare(res1,dag))
 VP1 <- bondadAjuste1$tp
 FP1 <- bondadAjuste1$fp
 FN1 <- bondadAjuste1$fn
-precicion1 = VP1 / (VP1 + FP1)
+precision1 = VP1 / (VP1 + FP1)
 recall1 = VP / (VP1 + FN1)
-calculoF1 <- 2*precicion*recall/(precicion + recall)
+calculoF1 <- 2*precision1*recall/(precision1 + recall)
 
 
 
