@@ -89,7 +89,20 @@ fittedbn <- bn.fit(res,data=as_df)
 print(fittedbn$E)
 
 
+#Compara las aristas de res1 y dag
+#Indica que modificaicones se tienen que realizar en res1 para que sea igual a dag
 
+#Complemento
+#shd(res1,dag,debug = TRUE)
+
+#unlist(compare(res1,dag)) entrga una matriz con los valores de: tp fp fn
+# En el ejemplo se elige el modelo que entrege el mayor tp
+#     Filo lo anterior, utilizemos solo el BIC
+
+
+####################################################################################
+####################################################################################
+####################################################################################
 ####################################################################################
 ####################################################################################
 ####################################################################################
@@ -117,39 +130,89 @@ modelstring = paste0("[HIST|LVF][CVP|LVV][PCWP|LVV][HYP][LVV|HYP:LVF][LVF]",
 dag = model2network(modelstring)
 graphviz.plot(dag, layout = "dot")
 
-# Algoritmo Hill-Climbing
-res1 <- hc(data)
-graphviz.plot(res1, layout = "dot")
-sc1 <- score(res1,data)
-print(sc1)
+# BLACK LIST
+bl1 = tiers2blacklist(list("HYP", "LVF", "APL","ANES", c("PMB","INT","KINK","DISC")))
+bl2 = tiers2blacklist(list("PMB","INT","KINK","DISC", c("HYP", "LVF", "APL","ANES")))
+bl3 = tiers2blacklist(list("HYP", "LVF", c("APL","ANES")))
+bl4 = tiers2blacklist(list("APL","ANES", c("HYP", "LVF")))
+bl5 = tiers2blacklist(list("HYP", c("LVF")))
+bl6 = tiers2blacklist(list("LVF", c("HYP")))
+bl7 = tiers2blacklist(list("APL", c("ANES")))
+bl8 = tiers2blacklist(list("ANES", c("APL")))
+bl9 = tiers2blacklist(list("PMB", "INT", c("KINK","DISC")))
+bl10 = tiers2blacklist(list("KINK", "DISC", c("PMB","INT")))
+bl11 = tiers2blacklist(list("PMB", c("INT")))
+bl12 = tiers2blacklist(list("INT", c("PMB")))
+bl13 = tiers2blacklist(list("KINK", c("DISC")))
+bl14 = tiers2blacklist(list("DISC", c("KINK")))
+bl15 = tiers2blacklist(list("LVF", c("CVP")))
+bl16 = tiers2blacklist(list("LVF", c("PCWP")))
+bl17 = tiers2blacklist(list("PCWP", c("LVF")))
+bl =rbind(bl1,bl2,bl3,bl4,bl5,bl6,bl7,bl8,bl9,bl10,bl11,bl12,bl13,bl14)
+
+#WHITE LIST
+wl <- tiers2blacklist(list("CO",c("STKV","HR")))
+
+####################### Algoritmo Hill-Climbing
+res1 <- hc(data,blacklist = bl, whitelist = wl)
 fittedbn1 <- bn.fit(res1,data=data)
-print(fittedbn1)
+par(mfrow = c(1, 2))
+graphviz.compare(dag, res1, layout = "fdp" ,shape = "ellipse", main = c("DAG original", "DAG propio"))
+graphviz.compare(fittedbn1, res1, layout = "fdp" ,shape = "ellipse", main = c("DAG fitted", "DAG propio"))
 
-#Compara las aristas de res1 y dag
-#Indica que modificaicones se tienen que realizar en res1 para que sea igual a dag
-shd(res1,dag,debug = TRUE)
+BIC1 <- score(res1,data)
 
-#unlist(compare(res1,dag)) entrga una matriz con los valores de: tp fp fn
-# En el ejemplo se elige el modelo que entrege el mayor tp
-#     Filo lo anterior, utilizemos solo el BIC
-print(unlist(compare(res1,dag)))
+bondadAjuste1 <- compare(res1,dag)
+VP1 <- bondadAjuste1$tp
+FP1 <- bondadAjuste1$fp
+FN1 <- bondadAjuste1$fn
+precicion1 = VP1 / (VP1 + FP1)
+recall1 = VP / (VP1 + FN1)
+calculoF1 <- 2*precicion*recall/(precicion + recall)
+BIC1
+precicion1
+recall1
+calculoF1
 
-#Comparacion inutil
-#compare(res1,dag, arcs = TRUE)
+######################### Algoritmo Max-Min Hill Climbing
+res1 <- mmhc(data,blacklist = bl, whitelist = wl)
+fittedbn1 <- bn.fit(res1,data=data)
+par(mfrow = c(1, 2))
+graphviz.compare(dag, res1, layout = "fdp" ,shape = "ellipse", main = c("DAG original", "DAG propio"))
+graphviz.compare(fittedbn1, res1, layout = "fdp" ,shape = "ellipse", main = c("DAG fitted", "DAG propio"))
+
+BIC1 <- score(res1,data)
+bondadAjuste1 <- (compare(res1,dag))
+
+VP1 <- bondadAjuste1$tp
+FP1 <- bondadAjuste1$fp
+FN1 <- bondadAjuste1$fn
+
+precicion1 = VP1 / (VP1 + FP1)
+recall1 = VP / (VP1 + FN1)
+calculoF1 <- 2*precicion*recall/(precicion + recall)
 
 
-# Algoritmo Max-Min Hill Climbing
-res2 <- mmhc(data)
-graphviz.plot(res2, layout = "dot")
-sc2 <- score(res2,data)
-print(sc2)
-fittedbn <- bn.fit(res2,data=data)
-print(fittedbn)
+
+
 
 # Max-Min Parents & Children (NO SIRVE)
-#res <- mmpc(data)
-#graphviz.plot(res, layout = "dot")
-#sc <- score(res,data)
-#print(sc)
-#fittedbn <- bn.fit(res,data=data)
-#print(fittedbn)
+res1 <- mmpc(data,blacklist = bl, whitelist = wl)
+fittedbn1 <- bn.fit(res1,data=data)
+par(mfrow = c(1, 2))
+graphviz.compare(dag, res1, layout = "fdp" ,shape = "ellipse", main = c("DAG original", "DAG propio"))
+
+BIC1 <- score(res1,data)
+bondadAjuste1 <- (compare(res1,dag))
+VP1 <- bondadAjuste1$tp
+FP1 <- bondadAjuste1$fp
+FN1 <- bondadAjuste1$fn
+precicion1 = VP1 / (VP1 + FP1)
+recall1 = VP / (VP1 + FN1)
+calculoF1 <- 2*precicion*recall/(precicion + recall)
+
+
+
+
+
+
