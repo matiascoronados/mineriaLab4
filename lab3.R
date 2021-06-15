@@ -158,10 +158,7 @@ res1 <- hc(data,blacklist = bl, whitelist = wl)
 fittedbn1 <- bn.fit(res1,data=data)
 par(mfrow = c(1, 2))
 graphviz.compare(dag, res1, layout = "fdp" ,shape = "ellipse", main = c("DAG original", "DAG propio"))
-graphviz.compare(fittedbn1, res1, layout = "fdp" ,shape = "ellipse", main = c("DAG fitted", "DAG propio"))
-
 BIC1 <- score(res1,data)
-
 bondadAjuste1 <- compare(res1,dag)
 VP1 <- bondadAjuste1$tp
 FP1 <- bondadAjuste1$fp
@@ -174,6 +171,9 @@ precision1
 recall1
 calculoF1
 
+#########uscar que es esto###############
+#logLik.hc1 <- logLik(res1, data)
+
 ######################### Algoritmo Max-Min Hill Climbing
 res1 <- mmhc(data,blacklist = bl, whitelist = wl)
 fittedbn1 <- bn.fit(res1,data=data)
@@ -181,7 +181,11 @@ par(mfrow = c(1, 2))
 graphviz.compare(dag, res1, layout = "fdp" ,shape = "ellipse", main = c("DAG original", "DAG propio"))
 graphviz.compare(fittedbn1, res1, layout = "fdp" ,shape = "ellipse", main = c("DAG fitted", "DAG propio"))
 
-BIC1 <- score(res1,data)
+
+
+logLik.hc1 <- logLik(res1, data)
+
+BIC2 <- score(res1,data)
 bondadAjuste1 <- (compare(res1,dag))
 
 VP1 <- bondadAjuste1$tp
@@ -190,26 +194,62 @@ FN1 <- bondadAjuste1$fn
 
 precision1 = VP1 / (VP1 + FP1)
 recall1 = VP / (VP1 + FN1)
-calculoF1 <- 2*precision1*recall/(precision1 + recall)
+calculoF2 <- 2*precision1*recall/(precision1 + recall)
 
 
 
 
 
-# Max-Min Parents & Children (NO SIRVE)
+######### NO SIRVE PARA NUESTRO CONTEXTO
+##Max-Min Parents & Children (NO SIRVE)
 res1 <- mmpc(data,blacklist = bl, whitelist = wl)
 fittedbn1 <- bn.fit(res1,data=data)
 par(mfrow = c(1, 2))
 graphviz.compare(dag, res1, layout = "fdp" ,shape = "ellipse", main = c("DAG original", "DAG propio"))
 
-BIC1 <- score(res1,data)
+BIC3 <- score(res1,data)
 bondadAjuste1 <- (compare(res1,dag))
 VP1 <- bondadAjuste1$tp
 FP1 <- bondadAjuste1$fp
 FN1 <- bondadAjuste1$fn
 precision1 = VP1 / (VP1 + FP1)
 recall1 = VP / (VP1 + FN1)
-calculoF1 <- 2*precision1*recall/(precision1 + recall)
+calculoF3 <- 2*precision1*recall/(precision1 + recall)
+
+###3
+BIC1
+BIC2
+#BIC3
+
+calculoF1
+calculoF2
+#calculoF3
+
+
+################
+# Metodo definitivo
+###############
+
+res1 <- hc(data,blacklist = bl, whitelist = wl)
+fittedbn1 <- bn.fit(res1,data=data)
+par(mfrow = c(1, 2))
+graphviz.compare(dag, res1, layout = "fdp" ,shape = "ellipse", main = c("DAG original", "DAG propio"))
+
+
+### Query
+######## Aqui demostramos propagacion de la evidencia
+
+#Da buena
+cpquery(fittedbn1,evidence = (VTUB == "HIGH" & ACO2 == "LOW" & PAP == "LOW"),event = (INT == "NORMAL"))
+
+#YO
+cpquery(fittedbn1,evidence = (PAP == "HIGH" & VLNG == "HIGH" & KINK == "TRUE"),event = (PMB == "TRUE"))
+
+#BRYAN
+cpquery(fittedbn1,evidence = (BP == "LOW" & CCHL == "HIGH"),event = (PMB == "TRUE"))
+
+
+
 
 
 
