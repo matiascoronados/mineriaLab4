@@ -76,7 +76,7 @@ res2 <- hc(data)
 fittedbn1 <- bn.fit(res2,data=data)
 par(mfrow = c(1, 2))
 graphviz.compare(res2, res1, layout = "fdp" ,shape = "ellipse", main = c("Sin restricciones", "Con restricciones"))
-BIC2 <- score(res1,data)
+BIC2 <- score(res2,data)
 BIC2
 
 
