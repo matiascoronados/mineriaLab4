@@ -1,108 +1,10 @@
 
 #install.packages('bnlearn')
 require(bnlearn)
-
-####################################################################################
-###############################  CODIGO DEL PROFE  #################################
-####################################################################################
-
-# Hay que usar el profeso de flatering para las categorias que no son binarias
-bn_df <- data.frame(coronary)
-
-############################
-# Algoritmo Hill-Climbing
-############################
-# -La funcion entrega la estructura de red bayeciana-
-# Con aristas direccionadas que nos permiten ver la relacion causa-conseciencia
-# Se pueden realizar consultas a la red para obtener 'relaciones' con cierta probabilidad de
-# ocurrencia.
-  
-# Red bayeciana sin cambios
-res_hc <- hc(bn_df)
-plot(res_hc)
-print(res_hc)
-
-# Red bayeciana con 'lista negra' de relaciones
-bl <- data.frame('M..Work',"Family")
-res_hc_bl <- hc(bn_df, blacklist = bl)
-
-plot(res_hc_bl)
-print(res_hc_bl)
-
-# Propagacion de la evidencia
-fittedbn <- bn.fit(res_hc_bl,data=bn_df)
-print(fittedbn$Proteins)
-
-
-# Consultas a la red bayeciana
-query1 <- cpquery(fittedbn, event = (Proteins == ">3"), evidence = ((Smoking=="no") & (M..Work=="no")))
-
-
-#NOTAS
-# Se puede *incorporar conocimiento externo* utilizando la 'lista negra', con tal de eliminar relaciones
-# que no deben existir en base al contexto del problema
-# El print del modelo:
-#      Indica el numero de arcos y nodos. **Hay que tomar en consideracion del BIC**
-# BIC: Indice que relaciona la complejidad del modelo vs el error asociado
-#      Entrega una metrica para comparar modelos, en donde el BIC mayor indica cual es el
-#      mejor modelo.
-# Propagacion de la evidencia:
-#      Entrega una tabla de probabilidades condicional, la cual nos indica la *probabilidad* de un evento
-#      dada la evidencia
-
-
-########################################################
-# Comparativa de algoritmos
-########################################################
-
-############################
-# Metodo de gradiente estodastico
-#   Algoritmo Hill-Climbing
-############################
-as_df <- data.frame(asia)
-res <- hc(as_df)
-plot(res)
-sc <- score(res,as_df)
-print(sc)
-fittedbn <- bn.fit(res,data=as_df)
-print(fittedbn$E)
-
-############################
-# Algoritmo Max-Min Hill Climbing
-############################
-res <- mmhc(as_df)
-plot(res)
-sc <- score(res,as_df)
-print(sc)
-fittedbn <- bn.fit(res,data=as_df)
-print(fittedbn$E)
-
-
-############################
-# Max-Min Parents & Children
-############################
-res <- mmpc(as_df)
-plot(res)
-sc <- score(res,as_df)
-print(sc)
-fittedbn <- bn.fit(res,data=as_df)
-print(fittedbn$E)
-
-
-#Compara las aristas de res1 y dag
-#Indica que modificaicones se tienen que realizar en res1 para que sea igual a dag
-
-#Complemento
-#shd(res1,dag,debug = TRUE)
-
-#unlist(compare(res1,dag)) entrga una matriz con los valores de: tp fp fn
-# En el ejemplo se elige el modelo que entrege el mayor tp
-#     Filo lo anterior, utilizemos solo el BIC
-
-
 ####################################################################################
 ####################################################################################
 ####################################################################################
+######### NUESTRO #########
 ####################################################################################
 ####################################################################################
 ####################################################################################
@@ -119,6 +21,8 @@ rds <- readRDS("/Users/matiascoronado/Desktop/mineriaLab4/ALARM/alarm.rds")
 
 #""""""""""Pre-procesamiento""""""""""
 data = alarm[,c(1:37)]
+
+#Lo vamos a entregar.
 
 modelstring = paste0("[HIST|LVF][CVP|LVV][PCWP|LVV][HYP][LVV|HYP:LVF][LVF]",
                      "[STKV|HYP:LVF][ERLO][HRBP|ERLO:HR][HREK|ERCA:HR][ERCA][HRSA|ERCA:HR][ANES]",
@@ -151,25 +55,30 @@ bl17 = tiers2blacklist(list("PCWP", c("LVF")))
 bl =rbind(bl1,bl2,bl3,bl4,bl5,bl6,bl7,bl8,bl9,bl10,bl11,bl12,bl13,bl14)
 
 #WHITE LIST
-wl <- tiers2blacklist(list("CO",c("STKV","HR")))
-
+wl1 <- tiers2blacklist(list("CO",c("STKV","HR")))
+wl2 <- tiers2blacklist(list("HYP",c("BP","PRSS")))
+wl3 <- tiers2blacklist(list("LVF",c("HRBP","HREK","HRSA","HR")))
+wl4 <- tiers2blacklist(list("PMB",c("PAP","PVS")))
+wl <- rbind(wl1,wl2,wl3,wl4)
 ####################### Algoritmo Hill-Climbing
+
+#UTILIZANDO BLACK/WHITE LIST
 res1 <- hc(data,blacklist = bl, whitelist = wl)
 fittedbn1 <- bn.fit(res1,data=data)
 par(mfrow = c(1, 2))
 graphviz.compare(dag, res1, layout = "fdp" ,shape = "ellipse", main = c("DAG original", "DAG propio"))
 BIC1 <- score(res1,data)
-bondadAjuste1 <- compare(res1,dag)
-VP1 <- bondadAjuste1$tp
-FP1 <- bondadAjuste1$fp
-FN1 <- bondadAjuste1$fn
-precision1 = VP1 / (VP1 + FP1)
-recall1 = VP / (VP1 + FN1)
-calculoF1 <- 2*precision*recall/(precision1 + recall)
 BIC1
-precision1
-recall1
-calculoF1
+
+#SIN BLACK/WHITE LIST
+
+res2 <- hc(data)
+fittedbn1 <- bn.fit(res2,data=data)
+par(mfrow = c(1, 2))
+graphviz.compare(res2, res1, layout = "fdp" ,shape = "ellipse", main = c("Sin restricciones", "Con restricciones"))
+BIC2 <- score(res1,data)
+BIC2
+
 
 #########uscar que es esto###############
 #logLik.hc1 <- logLik(res1, data)
@@ -179,25 +88,11 @@ res1 <- mmhc(data,blacklist = bl, whitelist = wl)
 fittedbn1 <- bn.fit(res1,data=data)
 par(mfrow = c(1, 2))
 graphviz.compare(dag, res1, layout = "fdp" ,shape = "ellipse", main = c("DAG original", "DAG propio"))
-graphviz.compare(fittedbn1, res1, layout = "fdp" ,shape = "ellipse", main = c("DAG fitted", "DAG propio"))
-
-
 
 logLik.hc1 <- logLik(res1, data)
 
-BIC2 <- score(res1,data)
-bondadAjuste1 <- (compare(res1,dag))
-
-VP1 <- bondadAjuste1$tp
-FP1 <- bondadAjuste1$fp
-FN1 <- bondadAjuste1$fn
-
-precision1 = VP1 / (VP1 + FP1)
-recall1 = VP / (VP1 + FN1)
-calculoF2 <- 2*precision1*recall/(precision1 + recall)
-
-
-
+BIC1 <- score(res1,data)
+BIC1
 
 
 ######### NO SIRVE PARA NUESTRO CONTEXTO
@@ -206,23 +101,9 @@ res1 <- mmpc(data,blacklist = bl, whitelist = wl)
 fittedbn1 <- bn.fit(res1,data=data)
 par(mfrow = c(1, 2))
 graphviz.compare(dag, res1, layout = "fdp" ,shape = "ellipse", main = c("DAG original", "DAG propio"))
+BIC1 <- score(res1,data)
 
-BIC3 <- score(res1,data)
-bondadAjuste1 <- (compare(res1,dag))
-VP1 <- bondadAjuste1$tp
-FP1 <- bondadAjuste1$fp
-FN1 <- bondadAjuste1$fn
-precision1 = VP1 / (VP1 + FP1)
-recall1 = VP / (VP1 + FN1)
-calculoF3 <- 2*precision1*recall/(precision1 + recall)
-
-###3
-BIC1
-BIC2
 #BIC3
-
-calculoF1
-calculoF2
 #calculoF3
 
 
@@ -231,24 +112,34 @@ calculoF2
 ###############
 
 res1 <- hc(data,blacklist = bl, whitelist = wl)
+
 fittedbn1 <- bn.fit(res1,data=data)
+fittedbn2 <- bn.fit(res2,data=data)
 par(mfrow = c(1, 2))
-graphviz.compare(dag, res1, layout = "fdp" ,shape = "ellipse", main = c("DAG original", "DAG propio"))
+graphviz.compare(res1, dag, layout = "circo" ,shape = "ellipse", main = c("DAG original", "DAG propio"))
 
-
-### Query
+### Query ###
 ######## Aqui demostramos propagacion de la evidencia
 
 #Da buena
-cpquery(fittedbn1,evidence = (VTUB == "HIGH" & ACO2 == "LOW" & PAP == "LOW"),event = (INT == "NORMAL"))
-
+#Si el paciente necesita ser entubado
+cpquery(fittedbn1,evidence = (ACO2 == "LOW" & PAP == "LOW"),event = (INT == "NORMAL"))
+cpquery(fittedbn1,evidence = (ACO2 == "LOW"),event = (INT == "NORMAL"))
 #YO
-cpquery(fittedbn1,evidence = (PAP == "HIGH" & VLNG == "HIGH" & KINK == "TRUE"),event = (PMB == "TRUE"))
-
+cpquery(fittedbn1,evidence = (PCWP == "HIGH" & LVF == "FALSE"),event = (HYP == "TRUE"))
+cpquery(fittedbn1,evidence = (LVF == "FALSE"),event = (HYP == "TRUE"))
 #BRYAN
-cpquery(fittedbn1,evidence = (BP == "LOW" & CCHL == "HIGH"),event = (PMB == "TRUE"))
+#cpquery(fittedbn1,evidence = (BP == "LOW" & CCHL == "HIGH"),event = (LVF == "TRUE"))
 
 
+#Da buena
+cpquery(bif,evidence = (ARTCO2 == "LOW" & PAP == "LOW"),event = (INTUBATION == "NORMAL"))
+#YO
+cpquery(bif,evidence = (ARTCO2 == "LOW"),event = (INTUBATION == "NORMAL"))
+
+cpquery(bif,evidence = (PCWP == "HIGH" & LVFAILURE == "FALSE"),event = (HYPOVOLEMIA == "TRUE"))
+#BRYAN
+#cpquery(bif,evidence = (BP == "LOW" & CATECHOL == "HIGH"),event = (LVFAILURE == "TRUE"))
 
 
 
